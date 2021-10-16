@@ -1,0 +1,24 @@
+body{
+    background-color: coral;
+    foreground: red
+}
+.trigger-button{
+    border-radius: 100%;
+    margin: 4px 2px;
+    padding: 20px 10px;
+
+}
+.trigger-img {
+    max-height: 10em;
+    max-width: 10em;
+}
+.polaroid {
+    max-height: 30em;
+    background-image: url("/static/img/polaroid-32180_1280.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+.one-photo {
+    max-height: 25em;
+
+}

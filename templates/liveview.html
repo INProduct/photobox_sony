@@ -1,0 +1,23 @@
+{% extends 'base_template.html' %}
+
+{% block content %}
+
+<div class="container-xxl bg-dark">
+    <div>
+        <div class="">
+            <img id="liveview" src ="" />
+        </div>
+    </div>
+    <div>
+        <div class="">
+            <button class="trigger-button">
+                <a href="/take_a_photo">
+                <img class="trigger-img" src="{{ url_for('static', filename='img/accept-47587_640.png') }}" />
+                </a>
+            </button>
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='scripts/liveview.js') }}"></script>
+{% endblock %}
+
