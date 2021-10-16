@@ -16,6 +16,7 @@ class CameraHandler:
             self._camera = Camera()
         except ConnectionError:
             self._camera = None  # todo: show error on display
+            print("Camera unavailable")
         self._ready = False
         self._liveview_mode = False
         self._liveview_thread = None
@@ -38,25 +39,26 @@ class CameraHandler:
             photo_name = photo_path.split('/')[-1]
             im = Image.open(requests.get(photo_path, stream=True).raw)
             im.save('images/' + photo_name)  # todo: directory must be before start and liveview directory
+            return 'images/' + photo_name  # todo: change 'images' to variable name
+        return None
 
-        return res
     def _live_mode_off(self):
         if self._liveview_mode:
             self._camera.do(Actions.stopLiveview)
             self._liveview_mode = False
 
-    def get_liveview(self):
+    def get_liveview(self, callback):
         if self.ready:
             self._live_mode_off()
             res = self._camera.do(Actions.startLiveview)
             self._liveview_mode = True
             liveview_path = res['result'][0]
             print(liveview_path)
-            self._liveview_thread = threading.Thread(target=self._liveview_thread_loop, args=[liveview_path])
+            self._liveview_thread = threading.Thread(target=self._liveview_thread_loop, args=[liveview_path, callback])
             self._liveview_thread.start()
 
-    def _liveview_thread_loop(self, liveview_path):
-        liveview_parser.start_liveview(liveview_path)
+    def _liveview_thread_loop(self, liveview_path, callback):
+        liveview_parser.start_liveview(liveview_path, callback)
 
     def get_last_liveview_picture(self):
         return liveview_parser.get_last_liveview_picture()

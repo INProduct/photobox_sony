@@ -1,14 +1,14 @@
 import datetime
 import os
-
 import requests
 import io
-import queue
 from PIL import Image
 
 
 class ImageInformation:
-    work_queue = queue.LifoQueue(maxsize=20)
+    im_max_count = 20
+    im_count = 0
+
     def __init__(self):
         self.start_byte = 1
         self.payload_type = 1
@@ -31,19 +31,21 @@ class ImageInformation:
         self.padding_size = int.from_bytes(header[7:], byteorder='big')
 
     def decode_image(self, bytes):
-        im = Image.open(io.BytesIO(bytes))
+        ImageInformation.im_count += 1
+        if ImageInformation.im_count > ImageInformation.im_max_count:
+            ImageInformation.im_count = 0
+        im_raw_bytes = io.BytesIO(bytes)
+        im = Image.open(im_raw_bytes)
+        data = io.BytesIO()
         image_name = 'static/liveview/liveview_' + str(datetime.datetime.timestamp(datetime.datetime.now())) + '.jpg'
-        im.save(image_name)
-        ImageInformation.work_queue.put(image_name)
-        if ImageInformation.work_queue.qsize() > 15:
-            os.remove(ImageInformation.work_queue.get())
+        # image_name = 'static/liveview/liveview_' + str(ImageInformation.im_count) + '.jpg'
+        #image_name = 'static/liveview/liveview.jpg'
+        #im.save(image_name)
+        im.save(data, format='png')
+        return data
 
 
-def get_last_liveview_picture():
-    return ImageInformation.work_queue.get()
-
-
-def start_liveview(url):
+def start_liveview(url, callback):
     r = requests.get(url, stream=True)
     while True:
         ii = ImageInformation()
@@ -53,6 +55,6 @@ def start_liveview(url):
         ii.decode_payload_header(payload_header)
         img_bytes = r.raw.read(ii.payload_size)
         offset_bytes = r.raw.read(ii.padding_size)
-        ii.decode_image(img_bytes)
-
+        image_name = ii.decode_image(img_bytes)
+        callback(image_name)
 
