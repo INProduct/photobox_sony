@@ -1,0 +1,145 @@
+<TestItem@Widget>:
+    canvas.before:
+        Color:
+            rgba: 1, 0, 0, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<ImageButton>:
+    canvas.before:
+        Color:
+            rgba: 0.61, 0.8, 0, 0.41
+        Ellipse:
+            pos: self.x - (self.height + 25 - self.width) / 2, self.y - 25 / 2
+            size: self.height + 25, self.height + 25
+
+<PhotoItem@BoxLayout>:
+    main: root
+    Label:
+        text: 'PhotoItem'
+    Button:
+        text: 'Get Root'
+        on_release: main.on_button_release(root)
+
+<TimeSlider@Slider>:
+    id: delay_slider
+    delay_slider: delay_slider
+    step: 1
+    orientation: 'vertical'
+    max: 10
+    Image:
+        source: 'static/img/time-303642_640.png'
+        size_hint: None, None
+        size: sp(75), sp(75)
+        pos: root.center_x - sp(37), root.value_pos[1] - sp(16)
+    Label:
+        font_size: sp(40)
+        text: '{}'.format(int(delay_slider.value))
+        pos: root.center_x - sp(100), root.value_pos[1] - sp(16)
+
+<GalleryItem>:
+    gallery_image: gallery_image
+    orientation: 'vertical'
+    on_release: app.go_to_detail(gallery_image.source)
+    Image:
+        size_hint: 1, 1
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        source: 'static/img/frame-1662287_1280.png'
+    AsyncImage:
+        id: gallery_image
+        size_hint: 1, 1
+        pos_hint: { 'center_x': 0.5, 'center_y': 0.5 }
+
+<MainScreen@Screen>:
+    name: 'main'
+    id: main_screen
+    gallery_button: gallery_button
+    shoot_button: shoot_button
+    countdown_numbers: countdown_numbers
+    liveview_image: liveview_image
+    RelativeLayout:
+        Image:
+            id: liveview_image
+            size_hint: 1, 1
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            nocache: True
+            allow_stretch: True
+            keep_ratio: True
+        ImageButton:
+            id: gallery_button
+            text: 'Gallery'
+            size_hint: 0.1, 0.1
+            pos_hint: {'x': 0.855, 'y': 0.85}
+            source: 'static/img/polaroid-150691_640.png'
+            on_release: app.go_to_gallery()
+        TimeSlider:
+            id: delay_slider
+            size_hint: 1, 0.5
+            pos_hint: {'center_x': 0.8, 'center_y': 0.3}
+        ImageButton:
+            id: shoot_button
+            text: 'Shoot!'
+            size_hint: 0.2, 0.2
+            pos_hint: {'center_x': 0.5, 'center_y': 0.15}
+            source: 'static/img/lens.png'
+            on_release: app.take_a_picture()
+        Image:
+            id: countdown_numbers
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            size_hint: 1, 0
+
+
+<GalleryScreen@Screen>:
+    name: 'gallery'
+    gallery_container: gallery_container
+    RelativeLayout:
+        ScrollView:
+            BoxLayout:
+                spacing: 40
+                id: gallery_container
+                size_hint: None, 1
+        ImageButton:
+            text: 'Back to Gallery'
+            size_hint: 0.1, 0.1
+            pos_hint: {'x': 0.855, 'y': 0.85}
+            source: 'static/img/left-297787_640.png'
+            on_release: app.go_to_main()
+
+<DetailScreen@Screen>:
+    name: 'detail'
+    detail_image: detail_image
+    RelativeLayout:
+        Image:
+            id: detail_image
+        BoxLayout:
+            size_hint: 0.5, 0.15
+            pos_hint: {'center_x': 0.5, 'y': 0.05}
+            spacing: 20
+            ImageButton:
+                text: 'Drucken'
+                source: 'static/img/printer-1293116_640.png'
+                on_release: app.print_photo(detail_image.source)
+            ImageButton:
+                text: 'Löschen'
+                source: 'static/img/recycle-310938_640.png'
+                on_release: app.remove_image(detail_image.source)
+        ImageButton:
+            size_hint: 0.1, 0.1
+            pos_hint: {'center_x': 0.9, 'y': 0.85}
+            source: 'static/img/left-297787_640.png'
+            on_release: app.go_to_gallery()
+
+
+
+<PhotoGui>:
+    sm: sm
+    fullscreen: True
+    ScreenManager:
+        id: sm
+        MainScreen:
+
+        GalleryScreen:
+            on_leave: app._unload_gallery()
+
+        DetailScreen:

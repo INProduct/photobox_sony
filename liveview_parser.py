@@ -1,13 +1,10 @@
-import datetime
-import os
 import requests
 import io
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
+from queue import Queue
 
 
 class ImageInformation:
-    im_max_count = 20
-    im_count = 0
 
     def __init__(self):
         self.start_byte = 1
@@ -31,23 +28,37 @@ class ImageInformation:
         self.padding_size = int.from_bytes(header[7:], byteorder='big')
 
     def decode_image(self, bytes):
-        ImageInformation.im_count += 1
-        if ImageInformation.im_count > ImageInformation.im_max_count:
-            ImageInformation.im_count = 0
         im_raw_bytes = io.BytesIO(bytes)
-        im = Image.open(im_raw_bytes)
-        data = io.BytesIO()
-        image_name = 'static/liveview/liveview_' + str(datetime.datetime.timestamp(datetime.datetime.now())) + '.jpg'
-        # image_name = 'static/liveview/liveview_' + str(ImageInformation.im_count) + '.jpg'
-        #image_name = 'static/liveview/liveview.jpg'
-        #im.save(image_name)
-        im.save(data, format='png')
-        return data
+        try:
+            im = Image.open(im_raw_bytes)  # todo: try catch don't forget
+            picturesQueue.put(im)
+        except UnidentifiedImageError as e:
+            print("Error: ", e)
 
 
-def start_liveview(url, callback):
+picturesQueue = None
+can_run = False
+
+
+def is_on_run():
+    return can_run
+
+
+def get_last_picture():
+    if picturesQueue is not None:
+        im = picturesQueue.get()
+        im.save('static/liveview/liveview.jpg')
+        return True
+    return False
+
+
+def start_liveview(url):
+    global can_run
+    global picturesQueue
+    can_run = True
+    picturesQueue = Queue(maxsize=25)
     r = requests.get(url, stream=True)
-    while True:
+    while can_run:
         ii = ImageInformation()
         common_header = r.raw.read(8)
         ii.decode_common_header(common_header)
@@ -55,6 +66,10 @@ def start_liveview(url, callback):
         ii.decode_payload_header(payload_header)
         img_bytes = r.raw.read(ii.payload_size)
         offset_bytes = r.raw.read(ii.padding_size)
-        image_name = ii.decode_image(img_bytes)
-        callback(image_name)
+        ii.decode_image(img_bytes)
+    r.close()
 
+
+def stop_liveview():
+    global can_run
+    can_run = False
